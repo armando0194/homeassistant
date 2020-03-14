@@ -1,0 +1,26 @@
+version: '3'
+services:
+  homeassistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant:stable
+    volumes:
+      - /PATH_TO_YOUR_CONFIG:/config
+    environment:
+      - TZ=America/New_York
+    restart: always
+    network_mode: host
+  # Visual Studio code
+  vscode:
+    container_name: vscode
+    image: codercom/code-server:v2
+    volumes:
+      # Set <project dir> to the directory you want to open in VS Code.
+      - /PROJECT_DIR:/home/coder/project
+      # <vs code config> should point to a local dir where vs code stores its data.
+      - /VS_CODE_CONFIG:/home/coder/.local/share/code-server
+    ports:
+      - "8080:8080"
+    command: code-server --auth @bmhtDJ1 --port 8080 --disable-telemetry /home/coder/project
+    environment:
+      PASSWORD: "${VSCODE_PASSWORD}"
+    restart: unless-stopped
