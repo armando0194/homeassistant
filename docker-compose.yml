@@ -1,26 +1,83 @@
 version: '3'
 services:
+  # HomeAssistant
   homeassistant:
     container_name: home-assistant
     image: homeassistant/home-assistant:stable
     volumes:
-      - /PATH_TO_YOUR_CONFIG:/config
-    environment:
-      - TZ=America/New_York
+      # Local path where your home assistant config will be stored
+      - /home/$USER/docker_files/home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
     restart: always
     network_mode: host
+    depends_on:
+      # MariaDB is optional (only if you would like to use a different database for HA).
+      - mariadb
+    user: "${LOCAL_USER}:${LOCAL_USER}"
+
+  # MariaDb
+  mariadb:
+    image: mariadb/server:10.3
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: ha_db
+      MYSQL_USER: homeassistant
+      MYSQL_PASSWORD: "${HA_MYSQL_PASSWORD}"
+    user: "${LOCAL_USER}:${LOCAL_USER}"
+    volumes:
+      # Local path where the database will be stored.
+      - /mysql/config:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # Node-RED
+  #nodered:
+   # container_name: nodered
+#    image: nodered/node-red
+#    ports:
+#      - "1880:1880"
+#    volumes:
+#      # Local path where all Node-RED config will be stored.
+#      - /<local path>:/data
+#    depends_on:
+#      - homeassistant
+#    environment:
+#      TZ: "Europe/Amsterdam"
+#    user: "${LOCAL_USER}:${LOCAL_USER}"
+#    restart: unless-stopped
+
+  # AppDaemon
+#  appdaemon:
+#    container_name: appdaemon
+#    restart: unless-stopped
+#    image: acockburn/appdaemon:latest
+#    environment:
+#      HA_URL: "http://${SERVER_IP}:8123"
+#      TOKEN: "${HA_APPDAEMON_KEY}"
+#      DASH_URL: "http://${SERVER_IP}:5050"
+#    ports:
+#      - "5050:5050"
+#    volumes:
+      # Set which local directory will contain all your app daemon configuration
+#      - /<local config>:/conf
+#    depends_on:
+#      - homeassistant
+#   user: "${LOCAL_USER}:${LOCAL_USER}"
+
   # Visual Studio code
   vscode:
     container_name: vscode
-    image: codercom/code-server:v2
-    volumes:
+    image: codercom/code-server:latest
+    #volumes:
       # Set <project dir> to the directory you want to open in VS Code.
-      - /PROJECT_DIR:/home/coder/project
+      #- /home/$USER/docker_files/:/home/coder/project
       # <vs code config> should point to a local dir where vs code stores its data.
-      - /VS_CODE_CONFIG:/home/coder/.local/share/code-server
+      #- /home/$USER/docker_files/vscode/config:/home/coder/.local/share/code-server
     ports:
-      - "443:8443"
-    command: code-server --auth password
+      - "8443:8443"
+    command: code-server --auth password --port 8443 --disable-telemetry
     environment:
       PASSWORD: "${VSCODE_PASSWORD}"
     restart: unless-stopped
