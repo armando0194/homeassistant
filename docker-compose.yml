@@ -19,8 +19,8 @@ services:
       # <vs code config> should point to a local dir where vs code stores its data.
       - /VS_CODE_CONFIG:/home/coder/.local/share/code-server
     ports:
-      - 8080:8080
-    command: code-server --auth password --port 8080 --disable-telemetry /home/coder/project
+      - "443:8443"
+    command: code-server --auth password
     environment:
       PASSWORD: "${VSCODE_PASSWORD}"
     restart: unless-stopped
